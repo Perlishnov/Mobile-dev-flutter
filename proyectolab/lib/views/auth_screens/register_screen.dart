@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'main_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
+}
+class User{
+  final String name;
+  final String email;
+  final String password;
+  const User({required this.name, required this.email, required this.password});
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
@@ -11,10 +20,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _register() {
+  Future<User?> signup (String name, String email, String password) async{
+   final response = await http.post(
+     Uri.parse('http://10.0.2.2:3000/api/signup/'),
+     headers: <String, String>{
+       'Content-Type': 'application/json; charset=UTF-8',
+     },
+     body: jsonEncode({
+       "fullName": name,
+       "email": email,
+       "password": password
+     }),
+   );
+   if (response.statusCode == 200){
+     return User(
+         name: jsonDecode(response.body)['fullName'],
+         email: jsonDecode(response.body)['email'],
+         password: jsonDecode(response.body)['password']);
+   }
+   else{
+     return null;
+   }
+  }
+
+  void _register() async {
     if (_formKey.currentState!.validate()) {
       // Aquí puedes manejar el registro del usuario
-
+      final user = await signup (_nameController.text,_emailController.text, _passwordController.text);
+      if(user != null){
+        Navigator.pushAndRemoveUntil(context,
+          MaterialPageRoute(builder: (context)=> MainScreen(),),
+              (route)=> false,);
+      }
+      else{
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Login failed')));
+      }
     }
   }
 
