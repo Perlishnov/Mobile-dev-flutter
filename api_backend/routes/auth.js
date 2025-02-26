@@ -16,7 +16,7 @@ authRouter.post("/api/signup", async (req, res) => {
       email,
     });
     if (existingEmail) {
-      return res.status(400).send("El email ya esta registrado");
+      return res.status(400).send({msg:"El email ya esta registrado"});
     } else {
       const salt = await bcrypt.genSalt();
       const passwordHash = await bcrypt.hash(password, salt);
@@ -44,8 +44,10 @@ authRouter.post("/api/login", async (req, res) => {
       } else {
         const isMatch = await bcrypt.compare(password, user.password);
         if (isMatch) {
-          const token = jwt.sign({ id: user }, "SUPERSECRETKEY", { expiresIn: "1h" });
-          res.json({ token });
+          const token = jwt.sign({ id: user._id }, "SUPERSECRETKEY", { expiresIn: "1h" });
+          const { password, ...userWithoutPassword } = user._doc;
+          //Devolver el usuario sin la password
+          return res.json({ user: userWithoutPassword, token });
         } else {
           return res.status(400).send("La contraseña es incorrecta");
         }
