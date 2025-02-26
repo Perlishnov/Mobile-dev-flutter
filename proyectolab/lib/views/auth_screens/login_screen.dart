@@ -1,56 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:proyectolab/controllers/auth_controller.dart';
 import 'package:proyectolab/views/components/main_button.dart';
 import '../components/my_text_formfield.dart';
-import 'main_screen.dart';
 import 'register_screen.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 class LoginScreen extends StatefulWidget {
   LoginScreen({super.key});
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
-class UserToken {
-  final String token;
-  const UserToken({required this.token});
-}
 
 class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
-  Future<UserToken?> loginUser(String email, String password) async{
-    final response = await http.post(
-      Uri.parse('http://10.0.2.2:3000/api/login/'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode({
-        "email": email,
-        "password": password
-      }),
-    );
-    if (response.statusCode == 200){
-      return UserToken(token: jsonDecode(response.body)['token']);
-    }
-    else{
-      return null;
-    }
-  }
+  final AuthController _authController = AuthController();
   
   void login() async {
     if (_formKey.currentState!.validate()) {
       // Ejecutar el proceso de login
-      final userToken = await loginUser(emailController.text,passwordController.text);
-      if(userToken != null){
-        Navigator.pushAndRemoveUntil(context,
-          MaterialPageRoute(builder: (context)=> MainScreen(),),
-              (route)=> false,);
-      }
-      else{
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Login failed')));
+      if(_formKey.currentState!.validate()){
+        await _authController.signInUsers(context: context, email: emailController.text, password: passwordController.text).whenComplete((){
+          setState(() {
+            _formKey.currentState!.reset();
+          });
+        });
       }
     }
   }
