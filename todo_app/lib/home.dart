@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:todo_app/components/dialog_box.dart';
+import 'package:todo_app/components/theme_button.dart';
 import 'package:todo_app/components/todo_tile.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:todo_app/todo_db/database.dart';
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.changeTheme});
 
-  final String title;
+  final Function(bool useLightMode) changeTheme;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -14,14 +17,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _controller = TextEditingController();
-  List<List<dynamic>> taskList = [
-    ["Dar Clases", false],
-    ["Comprar cena", false],
-  ];
+  final _myBox = Hive.box('myBox');
+  database db = database();
 
   void checkBoxChange(bool? value, int index) {
     setState(() {
-      taskList[index][1] = !taskList[index][1];
+      db.toDoList[index][1] = !db.toDoList[index][1];
+      db.updateData();
     });
   }
 
@@ -43,7 +45,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void saveNewTask() {
     setState(() {
-      taskList.add([_controller.text, false]);
+      //taskList.add([_controller.text, false]);
+      db.toDoList.add([_controller.text, false]);
+      db.updateData();
       Navigator.of(context).pop();
       _controller.clear();
     });
@@ -51,18 +55,33 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void deleteTask(int index) {
     setState(() {
-      taskList.removeAt(index);
+      //taskList.removeAt(index);
+      db.toDoList.removeAt(index);
+      db.updateData();
     });
+  }
+  @override
+  void initState(){
+    if(_myBox.get('TODOLIST')== Null){
+      db.createInitialData();
+    }
+    else{
+      db.loadData();
+    }
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text("To Do App"),
+        actions: [
+          themeButton(changeTheme:widget.changeTheme )
+        ],
       ),
       body: ListView.builder(
-        itemCount: taskList.length,
+        itemCount: db.toDoList.length,
         itemBuilder: (context, index) {
           return Slidable(
             key: ValueKey(index),
@@ -79,8 +98,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             child: (
                 TodoTile(
-                  taskName: taskList[index][0],
-                  taskComplete: taskList[index][1],
+                  taskName: db.toDoList[index][0],
+                  taskComplete: db.toDoList[index][1],
                   onChanged: (value) => checkBoxChange(value, index),
                 )
             ),
