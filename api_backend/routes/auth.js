@@ -1,61 +1,62 @@
-const express = require("express");
-const User = require("../models/user");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-//Crear el enroutador
-const authRouter = express.Router();
+const express = require('express')
+const User = require('../models/user')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
-//Crear un usuario
 
-authRouter.post("/api/signup", async (req, res) => {
-  try {
-    //Obtener los campos necesarios para crear un usuario
-    const { fullName, email, password } = req.body;
-    //Verificar si el usuario ya existe en el bd
-    const existingEmail = await User.findOne({
-      email,
-    });
-    if (existingEmail) {
-      return res.status(400).send({msg:"El email ya esta registrado"});
-    } else {
-      const salt = await bcrypt.genSalt();
-      const passwordHash = await bcrypt.hash(password, salt);
-      let user = new User({
-        fullName,
-        email,
-        password: passwordHash,
-      });
-      await user.save();
-      res.json(user);
-    }
-  } catch (err) {
-    res.status(500).json({ err: err.message });
-    console.log(err);
-  }
-});
+const authRouter = express.Router()
 
-authRouter.post("/api/login", async (req, res) => {
-
+authRouter.post('/api/signup', async (req, res) => {
     try {
-      const { email, password } = req.body;
-      const user = await User.findOne({ email });
-      if (!user) {
-        return res.status(400).send("El email no esta registrado");
-      } else {
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (isMatch) {
-          const token = jwt.sign({ id: user._id }, "SUPERSECRETKEY", { expiresIn: "1h" });
-          const { password, ...userWithoutPassword } = user._doc;
-          //Devolver el usuario sin la password
-          return res.json({ user: userWithoutPassword, token });
+        const { fullName, email, password } = req.body
+        const existingEmail = await User.findOne({ email })
+        if (existingEmail) {
+            return res.status(400).json({ msg: "Email already exist" })
         } else {
-          return res.status(400).send("La contraseña es incorrecta");
+            //generate a salt with a cost factor of 10
+            const salt = await bcrypt.genSalt()
+            //hash de password using de generated salt
+            const hashedPassword = await bcrypt.hash(password, salt)
+            let user = new User({ fullName, email, password: hashedPassword })
+            user = await user.save()
+            res.json({ user })
         }
-      }
-    } catch (err) {
-      res.status(500).json({ err: err.message });
-      console.log(err);
-    }
-});
 
-module.exports = authRouter;
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+        console.log(error)
+    }
+})
+
+
+authRouter.post('/api/signin', async (req, res)=>{
+    try {
+        //get email and password from iterface
+        const {email, password} = req.body
+        //find if there is an existing user with provided email
+        const findUser = await User.findOne({email})
+        if (!findUser) {
+            return res.status(400).json({msg: "Email not found"})
+        } else {
+            //check if password match with provided email
+            const isMatch = await bcrypt.compare(password, findUser.password)
+            if (!isMatch) {
+                return res.status(400).json({msg: "Incorrect Password"})
+            } else {
+                //login de user
+                const token = jwt.sign({id: findUser._id}, "passwordKey")
+
+                //extract de password because we don't want to send it back to user
+                const { password, ...userWithoutPassword } = findUser._doc
+
+                //send the response back
+                res.json({token, ...userWithoutPassword})
+
+            }
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+})
+
+module.exports = authRouter

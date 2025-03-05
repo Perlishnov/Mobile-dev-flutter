@@ -2,8 +2,17 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const authRouter = require("./routes/auth");
+const authRouter = require('./routes/auth')
+const bannerRouter = require('./routes/banner')
+const categoryRouter = require('./routes/category')
+const subCategoryRouter = require("./routes/sub_category")
+const productRouter = require('./routes/product')
+const productReviewRouter = require('./routes/product_review')
+
 const cors = require("cors");
 const dotenv = require("dotenv");
+
+
 dotenv.config();
 
 const app = express();
@@ -18,6 +27,12 @@ app.use(
 );  
 app.use(express.json());
 app.use(authRouter);
+app.use(bannerRouter)
+app.use(categoryRouter)
+app.use(subCategoryRouter)
+app.use(productRouter)
+app.use(productReviewRouter)
+app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose
   .connect(db)
