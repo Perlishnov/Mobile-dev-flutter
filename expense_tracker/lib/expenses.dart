@@ -1,3 +1,4 @@
+import 'package:expense_tracker/components/chart.dart';
 import 'package:expense_tracker/components/new_expense.dart';
 import 'package:expense_tracker/models/expense.dart';
 import 'package:flutter/cupertino.dart';
@@ -70,6 +71,8 @@ class _ExpensesState extends State<Expenses> {
 
   @override
   Widget build(BuildContext context) {
+    final widgetWidth = MediaQuery.of(context).size.width;
+
     final mainContent = _registeredExpenses.isEmpty
         ? Center(child: Text("You don't have any expenses yet"))
         : ExpensesList(
@@ -88,19 +91,28 @@ class _ExpensesState extends State<Expenses> {
           ),
         ],
       ),
-      body: Column(
+      body: widgetWidth < 600 ? Column(
         children: [
+          Chart(expenses: _registeredExpenses),
           Expanded(
             child: mainContent,
           ),
         ],
+      ):Row(
+        children: [
+          Expanded(
+            child: Chart(expenses: _registeredExpenses),
+          ),
+          Expanded(
+          child: mainContent,
+          ),]
       ),
       drawer: Drawer(
         child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.all(100.0),
-              child: Text('Settings'),
+              child: Text('Settings', style: TextStyle(fontSize: 20)),
             ),
             CircleAvatar(
               radius: 60,
