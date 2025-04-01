@@ -2,7 +2,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const authRouter = require("./routes/auth");
-const authRouter = require('./routes/auth')
 const bannerRouter = require('./routes/banner')
 const categoryRouter = require('./routes/category')
 const subCategoryRouter = require("./routes/sub_category")
