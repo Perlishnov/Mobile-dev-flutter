@@ -237,11 +237,22 @@ class _CalculatorHomeState extends State<CalculatorHome> {
             GestureDetector(
               onTap: () {
                 final bmi = weight / ((height / 100) * (height / 100));
+                String advice = "";
+                if (bmi < 16) {
+                  advice= "Severe Thinness. You need to see a doctor";
+                }
+                else if (bmi > 18.5 && bmi < 24.5) {
+                  advice = "Keep it going. You're doing great";
+                } else if (bmi < 25) {
+                  advice= "You're overweight. Try to exercise more";
+                } else if (bmi > 30) {
+                  advice ="Be careful. You're obese. Try to exercise more and eat healthier";
+                }
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Your BMI Result'),
-                    content: Text('Your BMI is: ${bmi.toStringAsFixed(1)}'),
+                    content: Text('Your BMI is: ${bmi.toStringAsFixed(1)} \n ''Your BMI is $advice'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
