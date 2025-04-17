@@ -51,5 +51,6 @@ class CategoryController{
     }catch(e){
       print("Error al cargar categorias $e");
     }
+    return [];
   }
 }
